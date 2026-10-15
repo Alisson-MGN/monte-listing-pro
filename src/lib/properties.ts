@@ -1,26 +1,84 @@
-import photo0 from "@/assets/photo-0.asset.json";
-import photo1 from "@/assets/photo-1.asset.json";
-import photo2 from "@/assets/photo-2.asset.json";
-import photo3 from "@/assets/photo-3.asset.json";
-import photo4 from "@/assets/photo-4.asset.json";
-import photo5 from "@/assets/photo-5.asset.json";
-import photo6 from "@/assets/photo-6.asset.json";
-import photo7 from "@/assets/photo-7.asset.json";
-import photo8 from "@/assets/photo-8.asset.json";
-export type Property = {id:string; title:string; purpose:string; type:string; price:number; location:string; features:string[]; image:string; description:string};
-export type Filters = {purpose:string; type:string; maxprice:string; search:string};
-export const defaultFilters: Filters = {purpose:"all",type:"all",maxprice:"all",search:""};
-export const demoProperties: Property[] = [
-{id:'M-001',title:'Casa com ótimo espaço',purpose:'Venda',type:'Casa',price:0,location:'Monte Santo de Minas · Bairro a confirmar',features:['3 quartos','Garagem','Quintal'],image:photo3.url,description:'Exemplo demonstrativo. Atualize descrição, localização, preço e disponibilidade com os dados reais do imóvel.'},
-{id:'M-002',title:'Terreno residencial',purpose:'Venda',type:'Terreno',price:0,location:'Monte Santo de Minas · Localização a confirmar',features:['Residencial','Boa localização','Oportunidade'],image:photo4.url,description:'Exemplo demonstrativo de terreno. Confirme metragem, zoneamento, matrícula e condições antes de anunciar.'},
-{id:'M-003',title:'Casa para locação',purpose:'Locação',type:'Casa',price:0,location:'Monte Santo de Minas · Bairro a confirmar',features:['2 quartos','Área de serviço','Residencial'],image:photo5.url,description:'Exemplo demonstrativo de imóvel para locação. Atualize aluguel, condições e disponibilidade.'},
-{id:'M-004',title:'Casa para a família',purpose:'Venda',type:'Casa',price:0,location:'Monte Santo de Minas · Localização a confirmar',features:['Ambientes amplos','Garagem','Quintal'],image:photo6.url,description:'Exemplo ilustrativo. Adicione a descrição real, metragem, quartos, banheiros e demais informações confirmadas.'},
-{id:'M-005',title:'Espaço comercial',purpose:'Locação',type:'Comercial',price:0,location:'Monte Santo de Minas · Localização a confirmar',features:['Comercial','Versátil','Boa visibilidade'],image:photo7.url,description:'Exemplo de espaço comercial. Confirme endereço, área útil, aluguel e condições de uso.'},
-{id:'M-006',title:'Lote para construir',purpose:'Venda',type:'Terreno',price:0,location:'Monte Santo de Minas · Localização a confirmar',features:['Construção','Investimento','Residencial'],image:photo8.url,description:'Exemplo demonstrativo de lote. Inclua área, dimensões, infraestrutura e situação documental confirmadas.'}
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/integrations/supabase/types";
+
+export type PropertyType = Database["public"]["Enums"]["property_type"];
+export type TransactionType = Database["public"]["Enums"]["transaction_type"];
+export type PropertyStatus = Database["public"]["Enums"]["property_status"];
+
+export type PropertyImageRow = { id: string; url: string; position: number };
+export type Property = {
+  id: string; title: string; description: string;
+  property_type: PropertyType; transaction_type: TransactionType;
+  price: number; condominium_fee: number | null; iptu: number | null;
+  bedrooms: number; bathrooms: number; parking_spaces: number; area_m2: number | null;
+  address?: string | null; show_address: boolean; public_address: string | null;
+  neighborhood: string; city: string; state: string; cover_image: string | null;
+  status: PropertyStatus; featured: boolean; created_at: string; updated_at: string;
+  property_images: PropertyImageRow[];
+};
+
+export const propertyTypes: { value: PropertyType; label: string }[] = [
+  { value: "casa", label: "Casa" }, { value: "apartamento", label: "Apartamento" },
+  { value: "terreno", label: "Terreno" }, { value: "comercial", label: "Comercial" }, { value: "rural", label: "Rural" },
 ];
-export function filterProperties(properties:Property[],filters:Filters){
- const q=filters.search.trim().toLocaleLowerCase('pt-BR');
- return properties.filter(p=>(filters.purpose==='all'||p.purpose===filters.purpose)&&(filters.type==='all'||p.type===filters.type)&&(filters.maxprice==='all'||(p.price>0&&p.price<=Number(filters.maxprice)))&&(!q||(p.title+' '+p.location+' '+p.features.join(' ')).toLocaleLowerCase('pt-BR').includes(q)));
+export const transactionTypes: { value: TransactionType; label: string }[] = [
+  { value: "venda", label: "Venda" }, { value: "aluguel", label: "Aluguel" },
+];
+export const statusLabels: Record<PropertyStatus, string> = {
+  draft: "Rascunho", published: "Publicado", sold: "Vendido", rented: "Alugado",
+};
+export const typeLabel = (t: PropertyType) => propertyTypes.find(x => x.value === t)?.label ?? t;
+
+export type Filters = { purpose: "all" | TransactionType; type: "all" | PropertyType; maxprice: string; search: string };
+export const defaultFilters: Filters = { purpose: "all", type: "all", maxprice: "all", search: "" };
+
+const PUBLIC_COLUMNS = "id,title,description,property_type,transaction_type,price,condominium_fee,iptu,bedrooms,bathrooms,parking_spaces,area_m2,show_address,public_address,neighborhood,city,state,cover_image,status,featured,created_at,updated_at,property_images(id,url,position)";
+
+/** Removes characters that would break a PostgREST `or` filter; keeps letters, numbers and spaces. */
+export function sanitizeSearch(value: string) {
+  return value.replace(/[^\p{L}\p{N}\s-]/gu, " ").replace(/\s+/g, " ").trim().slice(0, 80);
 }
-export function money(n:number){return n>0?n.toLocaleString('pt-BR',{style:'currency',currency:'BRL',maximumFractionDigits:0}):'Consulte o valor'}
-export function safeImageUrl(value:string){try{const url=new URL(value);return url.protocol==='https:'?url.href:null}catch{return null}}
+
+export function sortImages(p: Property): Property {
+  return { ...p, property_images: [...(p.property_images ?? [])].sort((a, b) => a.position - b.position) };
+}
+
+/** Public catalog: only published listings, filtered in the database. */
+export async function fetchPublishedProperties(client: SupabaseClient<Database>, filters: Filters) {
+  let q = client.from("properties").select(PUBLIC_COLUMNS).eq("status", "published");
+  if (filters.purpose !== "all") q = q.eq("transaction_type", filters.purpose);
+  if (filters.type !== "all") q = q.eq("property_type", filters.type);
+  if (filters.maxprice !== "all") q = q.gt("price", 0).lte("price", Number(filters.maxprice));
+  const s = sanitizeSearch(filters.search);
+  if (s) q = q.or(`title.ilike.%${s}%,neighborhood.ilike.%${s}%,city.ilike.%${s}%,description.ilike.%${s}%`);
+  const { data, error } = await q.order("featured", { ascending: false }).order("created_at", { ascending: false });
+  if (error) throw new Error("Não foi possível carregar os imóveis. Tente novamente em instantes.");
+  return (data as unknown as Property[]).map(sortImages);
+}
+
+export async function fetchPublishedProperty(client: SupabaseClient<Database>, id: string) {
+  const { data, error } = await client.from("properties").select(PUBLIC_COLUMNS).eq("status", "published").eq("id", id).maybeSingle();
+  if (error) throw new Error("Não foi possível carregar o imóvel.");
+  return data ? sortImages(data as unknown as Property) : null;
+}
+
+export function propertyFeatures(p: Pick<Property, "bedrooms" | "bathrooms" | "parking_spaces" | "area_m2">) {
+  const f: string[] = [];
+  if (p.bedrooms) f.push(`${p.bedrooms} ${p.bedrooms === 1 ? "quarto" : "quartos"}`);
+  if (p.bathrooms) f.push(`${p.bathrooms} ${p.bathrooms === 1 ? "banheiro" : "banheiros"}`);
+  if (p.parking_spaces) f.push(`${p.parking_spaces} ${p.parking_spaces === 1 ? "vaga" : "vagas"}`);
+  if (p.area_m2) f.push(`${Number(p.area_m2).toLocaleString("pt-BR")} m²`);
+  return f;
+}
+export function propertyLocation(p: Pick<Property, "public_address" | "neighborhood" | "city" | "state">) {
+  return [p.public_address, p.neighborhood, [p.city, p.state].filter(Boolean).join(" - ")].filter(Boolean).join(" · ");
+}
+export function propertyGallery(p: Pick<Property, "cover_image" | "property_images">) {
+  const urls = p.property_images.map(i => i.url);
+  return p.cover_image && !urls.includes(p.cover_image) ? [p.cover_image, ...urls] : urls;
+}
+export const reference = (id: string) => id.slice(0, 8).toUpperCase();
+export function money(n: number | null | undefined) {
+  return n && n > 0 ? Number(n).toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 }) : "Consulte o valor";
+}
+export function safeImageUrl(value: string) { try { const url = new URL(value); return url.protocol === "https:" ? url.href : null } catch { return null } }
