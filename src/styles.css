@@ -130,3 +130,8 @@ button,a,input,select,summary{touch-action:manipulation}
 .illustration-note{position:absolute;top:12px;left:12px;font-size:10px;color:var(--muted-foreground);background:var(--background);border-radius:6px;padding:3px 8px}
 @media(min-width:561px) and (max-width:900px){.hero h1{font-size:60px}.section h2{font-size:36px}}
 @media(max-width:560px){.section h2{font-size:30px}.modal-box h2{font-size:25px}.brand{min-width:0}}
+
+/* Contato */
+.contact-phone{display:inline-flex;align-items:center;gap:8px;margin-top:8px;color:var(--gold);font-weight:750;font-size:15px}
+.contact-phone:hover{color:var(--mint)}
+.footer-row .contact-phone{font-size:12px;margin:0}
