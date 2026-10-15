@@ -1,0 +1,101 @@
+{
+  "version": 1,
+  "sdk_version": "3.1.0",
+  "path": "/mcp",
+  "auth": {
+    "type": "none"
+  },
+  "mcp": {
+    "server": {
+      "name": "monte-listing-pro",
+      "version": "0.1.0",
+      "title": "Monte Listing Pro"
+    },
+    "tools": [
+      {
+        "name": "list_properties",
+        "title": "Listar imóveis",
+        "description": "Lista os imóveis de demonstração da Marangoni, com filtros opcionais de finalidade, tipo e palavra-chave.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "type": "object",
+          "properties": {
+            "purpose": {
+              "description": "Finalidade: Venda ou Locação.",
+              "type": "string",
+              "enum": [
+                "Venda",
+                "Locação"
+              ]
+            },
+            "type": {
+              "description": "Tipo do imóvel.",
+              "type": "string",
+              "enum": [
+                "Casa",
+                "Terreno",
+                "Comercial"
+              ]
+            },
+            "search": {
+              "description": "Bairro ou palavra-chave.",
+              "type": "string",
+              "maxLength": 100
+            }
+          },
+          "additionalProperties": false
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_property",
+        "title": "Detalhes do imóvel",
+        "description": "Retorna os detalhes de um imóvel de demonstração pela referência (ex.: M-001) e o link de WhatsApp para consulta.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 20,
+              "description": "Referência do imóvel, ex.: M-001."
+            }
+          },
+          "required": [
+            "id"
+          ],
+          "additionalProperties": false
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_contact",
+        "title": "Contato da Marangoni",
+        "description": "Retorna o WhatsApp oficial e a cidade de atendimento da Marangoni Despachante Imobiliário.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "type": "object",
+          "properties": {},
+          "additionalProperties": false
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
