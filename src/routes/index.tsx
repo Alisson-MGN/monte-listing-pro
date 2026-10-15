@@ -6,6 +6,8 @@ import { PropertyImage } from "@/components/property-image";
 import { DemoAdmin } from "@/components/demo-admin";
 import { defaultFilters, demoProperties, filterProperties, money, type Property } from "@/lib/properties";
 import { whatsapp, whatsappLink } from "@/lib/contact";
+import { useWebMCP } from "use-webmcp-tool";
+import { runWebMCPTool } from "@/lib/webmcp-telemetry";
 
 export const Route = createFileRoute("/")({
  head:()=>({meta:[
@@ -28,6 +30,14 @@ function Index(){
  useEffect(()=>{setYear(new Date().getFullYear());},[]);
  useEffect(()=>{if(!menuOpen)return;const listener=(event:MouseEvent)=>{if(event.target instanceof Node&&!header.current?.contains(event.target))setMenuOpen(false)};const key=(event:KeyboardEvent)=>{if(event.key==='Escape')setMenuOpen(false)};document.addEventListener('click',listener);document.addEventListener('keydown',key);return()=>{document.removeEventListener('click',listener);document.removeEventListener('keydown',key)}},[menuOpen]);
  const shown=filterProperties(properties,filters);
+ useWebMCP({name:"list_visible_properties",description:"Lista os imóveis de demonstração exibidos agora na tela, respeitando os filtros ativos.",annotations:{readOnlyHint:true,untrustedContentHint:true},execute:()=>runWebMCPTool("list_visible_properties",()=>shown.length?shown.map(p=>`${p.id}: ${p.title} · ${p.purpose} · ${p.type} · ${money(p.price)}`).join("\n"):"Nenhum imóvel exibido.")});
+ useWebMCP({name:"filter_properties",description:"Altera os filtros da busca de imóveis na tela (finalidade, tipo e palavra-chave).",inputSchema:{type:"object",properties:{purpose:{type:"string",enum:["all","Venda","Locação"],description:"Finalidade."},type:{type:"string",enum:["all","Casa","Terreno","Comercial"],description:"Tipo de imóvel."},search:{type:"string",description:"Bairro ou palavra-chave."}}},execute:(a:{purpose?:string;type?:string;search?:string})=>runWebMCPTool("filter_properties",()=>{
+  if(a.purpose!==undefined&&!["all","Venda","Locação"].includes(a.purpose))throw new Error("Finalidade inválida.");
+  if(a.type!==undefined&&!["all","Casa","Terreno","Comercial"].includes(a.type))throw new Error("Tipo inválido.");
+  if(a.search!==undefined&&typeof a.search!=="string")throw new Error("Palavra-chave inválida.");
+  const next={...filters,...(a.purpose!==undefined&&{purpose:a.purpose}),...(a.type!==undefined&&{type:a.type}),...(a.search!==undefined&&{search:a.search})};
+  setFilters(next);return `${filterProperties(properties,next).length} imóvel(is) exibido(s).`;})});
+ useWebMCP({name:"open_property_details",description:"Abre a janela de detalhes de um imóvel visível pela referência (ex.: M-001).",inputSchema:{type:"object",properties:{id:{type:"string",description:"Referência do imóvel."}},required:["id"]},execute:({id}:{id:string})=>runWebMCPTool("open_property_details",()=>{const p=shown.find(x=>x.id===id);if(!p)throw new Error("Imóvel não está visível.");setSelected(p);return `Detalhes de ${p.title} abertos.`;})});
  const generalMessage = "Olá! Vim pelo site da Marangoni e gostaria de falar com a equipe.";
  return <>
  <header className="top" ref={header}><div className="wrap nav"><a className="brand" href="#inicio" onClick={()=>setMenuOpen(false)}><span className="logo">⌂</span><span>MARANGONI<small>DESPACHANTE IMOBILIÁRIO</small></span></a><nav className={`links${menuOpen?' show':''}`} id="navlinks" aria-label="Navegação principal">{navigation.map(([id,label])=><a key={id} href={`#${id}`} onClick={()=>setMenuOpen(false)}>{label}</a>)}<Button asChild variant="prototype-ghost" size="prototype"><a href="#contato" onClick={()=>setMenuOpen(false)}>Fale conosco ↗</a></Button></nav><Button variant="prototype-menu" size="prototype" aria-label={menuOpen?'Fechar menu':'Abrir menu'} aria-controls="navlinks" aria-expanded={menuOpen} onClick={()=>setMenuOpen(!menuOpen)}>☰ <span>Menu</span></Button></div></header>
