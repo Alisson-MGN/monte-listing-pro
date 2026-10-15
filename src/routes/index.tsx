@@ -5,7 +5,6 @@ import { PropertyDetails } from "@/components/property-details";
 import { PropertyImage } from "@/components/property-image";
 import { DemoAdmin } from "@/components/demo-admin";
 import { defaultFilters, demoProperties, filterProperties, money, type Property } from "@/lib/properties";
-import heroAsset from "@/assets/photo-0.asset.json";
 
 export const Route = createFileRoute("/")({
  head:()=>({meta:[
@@ -15,8 +14,6 @@ export const Route = createFileRoute("/")({
   {property:"og:description",content:"Serviços imobiliários e suporte documental em Monte Santo de Minas e região. Anúncios ilustrativos de demonstração."},
   {property:"og:type",content:"website"},
   {name:"twitter:card",content:"summary_large_image"},
-  {property:"og:image",content:heroAsset.url},
-  {name:"twitter:image",content:heroAsset.url},
  ]}),component:Index,
 });
 const navigation=[['inicio','Início'],['imoveis','Imóveis'],['servicos','Serviços'],['sobre','Sobre nós'],['contato','Contato']];
