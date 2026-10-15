@@ -135,3 +135,22 @@ button,a,input,select,summary{touch-action:manipulation}
 .contact-phone{display:inline-flex;align-items:center;gap:8px;margin-top:8px;color:var(--gold);font-weight:750;font-size:15px}
 .contact-phone:hover{color:var(--mint)}
 .footer-row .contact-phone{font-size:12px;margin:0}
+
+/* Área da equipe e galeria */
+.admin-page h2{font:36px/1.15 var(--font-display);margin:8px 0 22px}
+.admin-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
+.admin-page .admin-form{margin-top:10px}
+.admin-form.single{grid-template-columns:minmax(0,1fr)}
+.admin-form .wide{grid-column:1/-1}
+.admin-form h3{margin:0 0 6px}
+.admin-form textarea{background:var(--prototype-tone-22);color:var(--foreground);border:1px solid var(--line);border-radius:9px;padding:10px;width:100%;resize:vertical}
+.admin-check{display:flex;align-items:center;gap:8px;font-size:14px}
+.admin-check input{width:auto!important;min-height:0!important}
+.admin-rows{display:grid;gap:10px;margin-top:20px}
+.admin-row{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;padding:16px;background:var(--card);border:1px solid var(--line);border-radius:14px}
+.admin-actions{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+.gallery-thumbs{display:flex;gap:8px;overflow-x:auto;margin-top:10px;padding-bottom:4px}
+.gallery-thumb{flex:0 0 72px;height:54px;padding:0;border:2px solid transparent;border-radius:8px;overflow:hidden;background:none;cursor:pointer}
+.gallery-thumb.active{border-color:var(--gold)}
+.gallery-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+@media (max-width:640px){.admin-form{grid-template-columns:minmax(0,1fr)}.admin-page h2{font-size:28px}}
