@@ -1,24 +1,48 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { PropertyDetails } from "@/components/property-details";
+import { PropertyImage } from "@/components/property-image";
+import { DemoAdmin } from "@/components/demo-admin";
+import { defaultFilters, demoProperties, filterProperties, money, type Property } from "@/lib/properties";
+import heroAsset from "@/assets/photo-0.asset.json";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
 export const Route = createFileRoute("/")({
-  component: Index,
+ head:()=>({meta:[
+  {title:"Marangoni | Imóveis e soluções imobiliárias em Monte Santo de Minas"},
+  {name:"description",content:"Marangoni Despachante Imobiliário: compra, venda, locação, administração e regularização imobiliária em Monte Santo de Minas e região. Catálogo demonstrativo."},
+  {property:"og:title",content:"Marangoni | Imóveis e soluções imobiliárias"},
+  {property:"og:description",content:"Serviços imobiliários e suporte documental em Monte Santo de Minas e região. Anúncios ilustrativos de demonstração."},
+  {property:"og:type",content:"website"},
+  {name:"twitter:card",content:"summary_large_image"},
+  {property:"og:image",content:heroAsset.url},
+  {name:"twitter:image",content:heroAsset.url},
+ ]}),component:Index,
 });
-
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
-function Index() {
-  return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
-    </div>
-  );
+const navigation=[['inicio','Início'],['imoveis','Imóveis'],['servicos','Serviços'],['sobre','Sobre nós'],['contato','Contato']];
+function Index(){
+ const [properties,setProperties]=useState<Property[]>(()=>[...demoProperties]);
+ const [filters,setFilters]=useState({...defaultFilters});
+ const [selected,setSelected]=useState<Property|null>(null);
+ const [menuOpen,setMenuOpen]=useState(false);
+ const [year,setYear]=useState<number|null>(null);
+ const header=useRef<HTMLElement>(null);
+ useEffect(()=>{setYear(new Date().getFullYear());},[]);
+ useEffect(()=>{if(!menuOpen)return;const listener=(event:MouseEvent)=>{if(event.target instanceof Node&&!header.current?.contains(event.target))setMenuOpen(false)};const key=(event:KeyboardEvent)=>{if(event.key==='Escape')setMenuOpen(false)};document.addEventListener('click',listener);document.addEventListener('keydown',key);return()=>{document.removeEventListener('click',listener);document.removeEventListener('keydown',key)}},[menuOpen]);
+ const shown=filterProperties(properties,filters);
+ const contact=()=>window.alert('O WhatsApp da Marangoni ainda não foi informado. O contato ficará disponível após a confirmação do número oficial.');
+ return <>
+ <header className="top" ref={header}><div className="wrap nav"><a className="brand" href="#inicio" onClick={()=>setMenuOpen(false)}><span className="logo">⌂</span><span>MARANGONI<small>DESPACHANTE IMOBILIÁRIO</small></span></a><nav className={`links${menuOpen?' show':''}`} id="navlinks" aria-label="Navegação principal">{navigation.map(([id,label])=><a key={id} href={`#${id}`} onClick={()=>setMenuOpen(false)}>{label}</a>)}<Button asChild variant="prototype-ghost" size="prototype"><a href="#contato" onClick={()=>setMenuOpen(false)}>Fale conosco ↗</a></Button></nav><Button variant="prototype-menu" size="prototype" aria-label={menuOpen?'Fechar menu':'Abrir menu'} aria-controls="navlinks" aria-expanded={menuOpen} onClick={()=>setMenuOpen(!menuOpen)}>☰ <span>Menu</span></Button></div></header>
+ <main>
+ <section className="hero" id="inicio"><div className="wrap hero-grid"><div><div className="eyebrow">Monte Santo de Minas e região</div><h1>Seu próximo imóvel <em>começa aqui.</em></h1><p>Atendimento próximo para encontrar, negociar e cuidar da documentação do seu imóvel com mais tranquilidade.</p><div className="actions"><Button asChild variant="prototype-gold" size="prototype"><a href="#imoveis">Encontrar um imóvel ↗</a></Button><Button asChild variant="prototype-ghost" size="prototype"><a href="#servicos">Nossos serviços</a></Button></div><div className="proof"><span>Compra e venda</span><span>Locação e administração</span><span>Regularização imobiliária</span></div></div><div className="hero-photo"><span className="illustration-note">Foto ilustrativa</span><div className="photo-caption"><div><small>MARANGONI IMOBILIÁRIA</small><strong>Um bom negócio começa com confiança.</strong></div><span className="caption-arrow">↗</span></div></div></div></section>
+ <section className="section" id="imoveis"><div className="wrap"><div className="section-head"><div><div className="eyebrow">Oportunidades selecionadas</div><h2>Encontre seu lugar.</h2></div><p>Pesquise imóveis por finalidade, tipo, faixa de preço ou bairro. Entre em contato para confirmar disponibilidade e detalhes.</p></div>
+ <div className="searchbox"><div className="field"><label htmlFor="purpose">Quero</label><select id="purpose" value={filters.purpose} onChange={e=>setFilters({...filters,purpose:e.target.value})}><option value="all">Comprar ou alugar</option><option value="Venda">Comprar</option><option value="Locação">Alugar</option></select></div><div className="field"><label htmlFor="type">Tipo de imóvel</label><select id="type" value={filters.type} onChange={e=>setFilters({...filters,type:e.target.value})}><option value="all">Todos os tipos</option><option>Casa</option><option>Terreno</option><option>Comercial</option></select></div><div className="field"><label htmlFor="maxprice">Preço máximo</label><select id="maxprice" value={filters.maxprice} onChange={e=>setFilters({...filters,maxprice:e.target.value})}><option value="all">Qualquer valor</option><option value="150000">R$ 150 mil</option><option value="300000">R$ 300 mil</option><option value="500000">R$ 500 mil</option></select></div><div className="field"><label htmlFor="search">Bairro ou palavra-chave</label><input id="search" placeholder="Ex.: Centro, garagem" value={filters.search} onChange={e=>setFilters({...filters,search:e.target.value})}/></div><Button variant="prototype-gold" size="prototype" onClick={()=>setFilters({...defaultFilters})}>Limpar</Button></div>
+ <div className="grid" id="cards">{shown.map(p=><article className="card" key={p.id}><div className="cover"><PropertyImage src={p.image} title={p.title} lazy/><span className="tag">{p.purpose==='Venda'?'À venda':'Para alugar'}</span><span className="demo-badge">Demonstração · Foto ilustrativa</span></div><div className="card-body"><h3>{p.title}</h3><div className="loc">⌖ {p.location}</div><div className="price">{money(p.price)}</div><div className="features">{p.features.map((feature,index)=><span key={index}>{feature}</span>)}</div><div className="card-bottom"><span>{p.id}</span><Button variant="prototype-link" size="prototype" onClick={()=>setSelected(p)} aria-label={`Ver detalhes de ${p.title}`}>Ver detalhes ↗</Button></div></div></article>)}{shown.length===0&&<div className="empty" role="status">Nenhum imóvel encontrado. Tente mudar os filtros.</div>}</div>
+ <p className="section-note">Os imóveis apresentados nesta demonstração são exemplos ilustrativos, não anúncios reais. Preços, localização e disponibilidade aguardam confirmação antes da publicação.</p></div></section>
+ <section className="section alt" id="servicos"><div className="wrap"><div className="section-head"><div><div className="eyebrow">Soluções imobiliárias</div><h2>Mais do que encontrar um imóvel.</h2></div><p>Suporte em diferentes etapas, da negociação à documentação, com atendimento local e personalizado.</p></div><div className="services"><article className="service"><div className="ico">⌂</div><h3>Compra e venda</h3><p>Apoio na negociação e orientação sobre a documentação necessária para cada etapa.</p></article><article className="service"><div className="ico">⌑</div><h3>Locação e administração</h3><p>Divulgação, atendimento e suporte às etapas de locação e administração de imóveis.</p></article><article className="service"><div className="ico">▤</div><h3>Regularização imobiliária</h3><p>Orientação para processos de regularização de residências e ampliações.</p></article><article className="service"><div className="ico">◇</div><h3>Documentos e cartório</h3><p>Apoio com matrículas, certidões, escrituras, contratos, ITBI e desmembramentos.</p></article></div></div></section>
+ <section className="section" id="sobre"><div className="wrap about"><div className="about-photo" role="img" aria-label="Foto ilustrativa de casa contemporânea"><span className="illustration-note">Foto ilustrativa</span></div><div className="about-copy"><div className="eyebrow">Sobre a Marangoni</div><h2>Seu imóvel merece atenção em cada detalhe.</h2><p>A Marangoni Despachante Imobiliário atende Monte Santo de Minas e região, reunindo serviços imobiliários e suporte documental para tornar cada etapa mais clara e organizada.</p><p>História da empresa, experiência da equipe e demais informações institucionais ainda aguardam confirmação.</p><div className="about-panel"><div>Atendimento local e personalizado</div><div>Compra, venda, locação e administração</div><div>Suporte documental imobiliário</div><div>Orientação durante as etapas do processo</div></div></div></div></section>
+ <section className="section alt" id="contato"><div className="wrap"><div className="contact-panel"><div><div className="eyebrow">Vamos conversar?</div><h2>Conte com a Marangoni.</h2><p>Quer comprar, vender, alugar ou regularizar um imóvel? Fale com a nossa equipe e conte o que você precisa.</p><div className="contact-location">Monte Santo de Minas · Minas Gerais</div><p className="demo-hint">WhatsApp oficial ainda não informado.</p></div><div className="contact-actions"><Button variant="prototype-gold" size="prototype" onClick={contact}>Conversar no WhatsApp ↗</Button><Button asChild variant="prototype-ghost" size="prototype"><a href="https://imobiliariamarangoni.com.br/" target="_blank" rel="noopener noreferrer">Site atual ↗</a></Button></div></div><DemoAdmin count={properties.length} onAdd={p=>{setProperties(current=>[p,...current]);setFilters({...defaultFilters})}}/></div></section>
+ </main><footer><div className="wrap footer-row"><div>© {year} Marangoni Despachante Imobiliário</div><div>Monte Santo de Minas · MG</div><div>Compra · Venda · Locação · Regularização</div></div></footer>
+ <PropertyDetails property={selected} onClose={()=>setSelected(null)} onContact={contact}/>
+ </>;
 }
