@@ -45,7 +45,7 @@ function AdminPage() {
   const refresh = () => { qc.invalidateQueries({ queryKey: ["admin-properties"] }); qc.invalidateQueries({ queryKey: ["catalog"] }); };
 
   const save = useMutation({
-    mutationFn: async ({ data, id }: { data: FormData; id?: string }) => {
+    mutationFn: async ({ data, id }: { data: FormData; id: string | undefined }) => {
       const { input, images } = parsePropertyForm(data);
       let pid = id;
       if (pid) { const { error } = await supabase.from("properties").update(input).eq("id", pid); if (error) throw new Error("Não foi possível salvar o imóvel."); }
