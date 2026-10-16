@@ -1,21 +1,22 @@
 import { defineTool, ToolError } from "@lovable.dev/mcp-js";
 import { z } from "zod";
-import { demoProperties } from "@/lib/properties";
+import { defaultFilters, fetchPublishedProperties, propertyFeatures, propertyLocation, reference } from "@/lib/properties";
 import { propertyEnquiryMessage, whatsappLink } from "@/lib/contact";
-import { toPropertyJson } from "./list-properties";
+import { publicClient, toPropertyJson } from "./list-properties";
 
 export default defineTool({
   name: "get_property",
   title: "Detalhes do imóvel",
-  description: "Retorna os detalhes de um imóvel de demonstração pela referência (ex.: M-001) e o link de WhatsApp para consulta.",
-  inputSchema: { id: z.string().min(1).max(20).describe("Referência do imóvel, ex.: M-001.") },
+  description: "Retorna os detalhes de um imóvel publicado pela referência de 8 caracteres e o link de WhatsApp para consulta.",
+  inputSchema: { id: z.string().min(4).max(40).describe("Referência do imóvel exibida no site.") },
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
-  handler: ({ id }) => {
-    const p = demoProperties.find(x => x.id.toLowerCase() === id.trim().toLowerCase());
+  handler: async ({ id }) => {
+    const ref = id.trim().toUpperCase();
+    const p = (await fetchPublishedProperties(publicClient(), defaultFilters)).find(x => reference(x.id) === ref || x.id === id.trim());
     if (!p) throw new ToolError(`Imóvel ${id} não encontrado.`);
-    const link = whatsappLink(propertyEnquiryMessage(p.title, p.id));
+    const link = whatsappLink(propertyEnquiryMessage(p.title, reference(p.id)));
     return {
-      content: [{ type: "text", text: `${p.id} — ${p.title} (DEMONSTRAÇÃO)\n${p.location}\n${p.features.join(", ")}\n${p.description}\nConsultar: ${link}` }],
+      content: [{ type: "text", text: `${reference(p.id)} — ${p.title}\n${propertyLocation(p)}\n${propertyFeatures(p).join(", ")}\n${p.description}\nConsultar: ${link}` }],
       structuredContent: { property: toPropertyJson(p), whatsappLink: link },
     };
   },
