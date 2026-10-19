@@ -98,6 +98,7 @@ export type Database = {
           id: string
           position: number
           property_id: string
+          storage_path: string | null
           url: string
         }
         Insert: {
@@ -105,6 +106,7 @@ export type Database = {
           id?: string
           position?: number
           property_id: string
+          storage_path?: string | null
           url: string
         }
         Update: {
@@ -112,6 +114,7 @@ export type Database = {
           id?: string
           position?: number
           property_id?: string
+          storage_path?: string | null
           url?: string
         }
         Relationships: [

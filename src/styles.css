@@ -154,3 +154,21 @@ button,a,input,select,summary{touch-action:manipulation}
 .gallery-thumb.active{border-color:var(--gold)}
 .gallery-thumb img{width:100%;height:100%;object-fit:cover;display:block}
 @media (max-width:640px){.admin-form{grid-template-columns:minmax(0,1fr)}.admin-page h2{font-size:28px}}
+.admin-toolbar{display:grid;grid-template-columns:2fr 1fr auto;gap:12px;align-items:end;margin-bottom:6px}
+.admin-toolbar input,.admin-toolbar select{background:var(--prototype-tone-22);color:var(--foreground);border:1px solid var(--line);border-radius:9px;padding:10px;width:100%;min-height:44px}
+.admin-row-main{display:flex;gap:14px;align-items:center;min-width:0}
+.admin-thumb{width:72px;height:54px;border-radius:8px;object-fit:cover;flex:none;background:var(--secondary)}
+.empty-thumb{display:grid;place-items:center;font-size:10px;color:var(--muted-foreground)}
+.status-pill{display:inline-block;padding:1px 8px;border-radius:999px;border:1px solid var(--line);font-size:11px;margin-right:4px}
+.status-pill.s-published{background:var(--primary);color:var(--primary-foreground);border-color:transparent}
+.photo-manager{display:grid;gap:10px}
+.photo-manager input[type=file]{padding:10px}
+.photo-list{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
+.photo-list li{position:relative;border:2px solid var(--line);border-radius:10px;overflow:hidden;background:var(--card)}
+.photo-list li.is-cover{border-color:var(--gold)}
+.photo-list img{width:100%;height:110px;object-fit:cover;display:block}
+.cover-badge{position:absolute;top:6px;left:6px;background:var(--gold);color:var(--primary-foreground);font-size:11px;font-weight:800;padding:2px 8px;border-radius:999px}
+.photo-tools{display:flex;flex-wrap:wrap;gap:4px;padding:6px}
+.photo-tools button{background:var(--secondary);color:var(--foreground);border:1px solid var(--line);border-radius:6px;padding:4px 8px;font-size:12px;cursor:pointer}
+.photo-tools button:disabled{opacity:.4;cursor:default}
+@media (max-width:640px){.admin-toolbar{grid-template-columns:minmax(0,1fr)}}

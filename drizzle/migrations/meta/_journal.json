@@ -8,6 +8,20 @@
       "when": 1792072784802,
       "tag": "0000_properties_backend",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1792381793454,
+      "tag": "0001_admin_panel_storage",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792381816605,
+      "tag": "0002_public_photo_read_policy",
+      "breakpoints": true
     }
   ]
 }
