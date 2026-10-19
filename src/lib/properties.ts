@@ -5,7 +5,7 @@ export type PropertyType = Database["public"]["Enums"]["property_type"];
 export type TransactionType = Database["public"]["Enums"]["transaction_type"];
 export type PropertyStatus = Database["public"]["Enums"]["property_status"];
 
-export type PropertyImageRow = { id: string; url: string; position: number };
+export type PropertyImageRow = { id: string; url: string; position: number; storage_path?: string | null };
 export type Property = {
   id: string; title: string; description: string;
   property_type: PropertyType; transaction_type: TransactionType;
@@ -32,7 +32,8 @@ export const typeLabel = (t: PropertyType) => propertyTypes.find(x => x.value ==
 export type Filters = { purpose: "all" | TransactionType; type: "all" | PropertyType; maxprice: string; search: string };
 export const defaultFilters: Filters = { purpose: "all", type: "all", maxprice: "all", search: "" };
 
-const PUBLIC_COLUMNS = "id,title,description,property_type,transaction_type,price,condominium_fee,iptu,bedrooms,bathrooms,parking_spaces,area_m2,show_address,public_address,neighborhood,city,state,cover_image,status,featured,created_at,updated_at,property_images(id,url,position)";
+const PUBLIC_COLUMNS = "id,title,description,property_type,transaction_type,price,condominium_fee,iptu,bedrooms,bathrooms,parking_spaces,area_m2,show_address,public_address,neighborhood,city,state,cover_image,status,featured,created_at,updated_at,property_images(id,url,position,storage_path)";
+export const PHOTO_BUCKET = "property-photos";
 
 /** Removes characters that would break a PostgREST `or` filter; keeps letters, numbers and spaces. */
 export function sanitizeSearch(value: string) {
@@ -53,13 +54,13 @@ export async function fetchPublishedProperties(client: SupabaseClient<Database>,
   if (s) q = q.or(`title.ilike.%${s}%,neighborhood.ilike.%${s}%,city.ilike.%${s}%,description.ilike.%${s}%`);
   const { data, error } = await q.order("featured", { ascending: false }).order("created_at", { ascending: false });
   if (error) throw new Error("Não foi possível carregar os imóveis. Tente novamente em instantes.");
-  return (data as unknown as Property[]).map(sortImages);
+  return resolvePhotos(client, (data as unknown as Property[]).map(sortImages));
 }
 
 export async function fetchPublishedProperty(client: SupabaseClient<Database>, id: string) {
   const { data, error } = await client.from("properties").select(PUBLIC_COLUMNS).eq("status", "published").eq("id", id).maybeSingle();
   if (error) throw new Error("Não foi possível carregar o imóvel.");
-  return data ? sortImages(data as unknown as Property) : null;
+  return data ? (await resolvePhotos(client, [sortImages(data as unknown as Property)]))[0] ?? null : null;
 }
 
 export function propertyFeatures(p: Pick<Property, "bedrooms" | "bathrooms" | "parking_spaces" | "area_m2">) {
@@ -82,3 +83,15 @@ export function money(n: number | null | undefined) {
   return n && n > 0 ? Number(n).toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 }) : "Consulte o valor";
 }
 export function safeImageUrl(value: string) { try { const url = new URL(value); return url.protocol === "https:" ? url.href : null } catch { return null } }
+
+const isUrl = (v: string) => /^https:\/\//.test(v);
+/** Turns stored photo paths (private bucket) into temporary signed links; full https links pass through. */
+export async function resolvePhotos(client: SupabaseClient<Database>, list: Property[]): Promise<Property[]> {
+  const paths = [...new Set(list.flatMap(p => [p.cover_image, ...p.property_images.map(i => i.url)]).filter((v): v is string => Boolean(v) && !isUrl(v!)))];
+  if (!paths.length) return list;
+  const { data } = await client.storage.from(PHOTO_BUCKET).createSignedUrls(paths, 60 * 60 * 6);
+  const map = new Map<string, string>();
+  for (const d of data ?? []) if (d.path && d.signedUrl) map.set(d.path, d.signedUrl);
+  const r = (v: string | null) => (v && !isUrl(v) ? map.get(v) ?? null : v);
+  return list.map(p => ({ ...p, cover_image: r(p.cover_image), property_images: p.property_images.map(i => ({ ...i, url: r(i.url) ?? "" })).filter(i => i.url) }));
+}
