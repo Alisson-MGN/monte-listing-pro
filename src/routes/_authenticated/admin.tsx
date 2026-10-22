@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
-import { money, PHOTO_BUCKET, propertyTypes, reference, resolvePhotos, sortImages, statusLabels, transactionTypes, type Property, type PropertyStatus } from "@/lib/properties";
+import { money, PHOTO_BUCKET, PUBLIC_COLUMNS, propertyTypes, reference, resolvePhotos, sortImages, statusLabels, transactionTypes, type Property, type PropertyStatus } from "@/lib/properties";
 import { movePhoto, parsePropertyForm, pickCover, type Photo } from "@/lib/property-form";
 
 export const Route = createFileRoute("/_authenticated/admin")({
@@ -32,9 +32,13 @@ async function fetchIsAdmin() {
   return Boolean(data);
 }
 async function fetchAll(): Promise<AdminProperty[]> {
-  const { data, error } = await supabase.from("properties").select("*, property_images(id,url,position,storage_path)").order("updated_at", { ascending: false });
-  if (error) throw new Error("Não foi possível carregar os imóveis.");
-  const raw = (data as unknown as Property[]).map(sortImages);
+  const [{ data, error }, addr] = await Promise.all([
+    supabase.from("properties").select(PUBLIC_COLUMNS).order("updated_at", { ascending: false }),
+    supabase.rpc("admin_property_addresses"),
+  ]);
+  if (error || addr.error) throw new Error("Não foi possível carregar os imóveis.");
+  const addresses = new Map((addr.data ?? []).map(a => [a.id, a.address]));
+  const raw = (data as unknown as Property[]).map(p => ({ ...sortImages(p), address: addresses.get(p.id) ?? null }));
   const resolved = await resolvePhotos(supabase, raw.map(p => ({ ...p, property_images: [...p.property_images] })));
   return raw.map((p, i) => {
     const urls = new Map(resolved[i]!.property_images.map(x => [x.id, x.url]));
