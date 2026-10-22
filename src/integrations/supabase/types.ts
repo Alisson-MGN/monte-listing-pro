@@ -20,6 +20,7 @@ export type Database = {
           area_m2: number | null
           bathrooms: number
           bedrooms: number
+          built_area_m2: number | null
           city: string
           condominium_fee: number | null
           cover_image: string | null
@@ -28,6 +29,7 @@ export type Database = {
           featured: boolean
           id: string
           iptu: number | null
+          land_area_m2: number | null
           neighborhood: string
           parking_spaces: number
           price: number
@@ -45,6 +47,7 @@ export type Database = {
           area_m2?: number | null
           bathrooms?: number
           bedrooms?: number
+          built_area_m2?: number | null
           city?: string
           condominium_fee?: number | null
           cover_image?: string | null
@@ -53,6 +56,7 @@ export type Database = {
           featured?: boolean
           id?: string
           iptu?: number | null
+          land_area_m2?: number | null
           neighborhood?: string
           parking_spaces?: number
           price?: number
@@ -70,6 +74,7 @@ export type Database = {
           area_m2?: number | null
           bathrooms?: number
           bedrooms?: number
+          built_area_m2?: number | null
           city?: string
           condominium_fee?: number | null
           cover_image?: string | null
@@ -78,6 +83,7 @@ export type Database = {
           featured?: boolean
           id?: string
           iptu?: number | null
+          land_area_m2?: number | null
           neighborhood?: string
           parking_spaces?: number
           price?: number
