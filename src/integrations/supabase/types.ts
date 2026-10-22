@@ -150,6 +150,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_property_addresses: {
+        Args: never
+        Returns: {
+          address: string
+          id: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
