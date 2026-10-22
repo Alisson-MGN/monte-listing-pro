@@ -32,7 +32,7 @@ export const typeLabel = (t: PropertyType) => propertyTypes.find(x => x.value ==
 export type Filters = { purpose: "all" | TransactionType; type: "all" | PropertyType; maxprice: string; search: string };
 export const defaultFilters: Filters = { purpose: "all", type: "all", maxprice: "all", search: "" };
 
-const PUBLIC_COLUMNS = "id,title,description,property_type,transaction_type,price,condominium_fee,iptu,bedrooms,bathrooms,parking_spaces,area_m2,show_address,public_address,neighborhood,city,state,cover_image,status,featured,created_at,updated_at,property_images(id,url,position,storage_path)";
+export const PUBLIC_COLUMNS = "id,title,description,property_type,transaction_type,price,condominium_fee,iptu,bedrooms,bathrooms,parking_spaces,area_m2,show_address,public_address,neighborhood,city,state,cover_image,status,featured,created_at,updated_at,property_images(id,url,position,storage_path)";
 export const PHOTO_BUCKET = "property-photos";
 
 /** Removes characters that would break a PostgREST `or` filter; keeps letters, numbers and spaces. */

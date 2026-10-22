@@ -22,6 +22,20 @@
       "when": 1792381816605,
       "tag": "0002_public_photo_read_policy",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1792674985797,
+      "tag": "0003_hide_private_address",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1792675001955,
+      "tag": "0004_address_admin_only",
+      "breakpoints": true
     }
   ]
 }
