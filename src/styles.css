@@ -185,3 +185,9 @@ button,a,input,select,summary{touch-action:manipulation}
 .carousel-dots{position:absolute;top:16px;right:16px;display:flex;gap:6px}
 .carousel-dots button{width:9px;height:9px;border-radius:50%;border:0;padding:0;background:var(--muted-foreground);opacity:.6;cursor:pointer}
 .carousel-dots button.active{background:var(--primary);opacity:1}
+
+/* Cartão de visita na seção Sobre */
+.about-photo img{width:100%;height:100%;min-height:inherit;object-fit:contain;display:block;border-radius:20px}
+/* Galeria de fotos nos detalhes: troca somente pelas setas */
+.gallery-main{position:relative}
+.gallery-counter{position:absolute;bottom:10px;right:12px;background:var(--background);color:var(--muted-foreground);font-size:11px;padding:3px 9px;border-radius:999px}
