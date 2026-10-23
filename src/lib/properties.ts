@@ -40,6 +40,38 @@ export function sanitizeSearch(value: string) {
   return value.replace(/[^\p{L}\p{N}\s-]/gu, " ").replace(/\s+/g, " ").trim().slice(0, 80);
 }
 
+export type FeatureSearch = { text: string; bedrooms: number | null; bathrooms: number | null; parking: number | null; parkingAny: boolean };
+const FEATURE_TERMS: [RegExp, "bedrooms" | "bathrooms" | "parking"][] = [
+  [/^quartos?$/, "bedrooms"],
+  [/^banheiros?$/, "bathrooms"],
+  [/^(vagas?|garagens?|garagem)$/, "parking"],
+];
+/**
+ * Splits the search box into feature filters and remaining free text.
+ * "quarto 3" → bedrooms=3; "garagem" without a number → at least 1 parking space.
+ * Case-insensitive and accent-insensitive; unmatched words stay as free text.
+ */
+export function parseSearch(value: string): FeatureSearch {
+  const tokens = value.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().split(/\s+/).filter(Boolean);
+  const out: FeatureSearch = { text: "", bedrooms: null, bathrooms: null, parking: null, parkingAny: false };
+  const rest: string[] = [];
+  for (let t = 0; t < tokens.length; t++) {
+    const term = FEATURE_TERMS.find(([re]) => re.test(tokens[t]!));
+    const next = tokens[t + 1];
+    if (term && next && /^\d+$/.test(next)) {
+      const n = Number(next);
+      if (term[1] === "bedrooms") out.bedrooms = n;
+      else if (term[1] === "bathrooms") out.bathrooms = n;
+      else { out.parking = n; out.parkingAny = false; }
+      t++;
+    } else if (term && term[1] === "parking") {
+      if (out.parking === null) out.parkingAny = true;
+    } else rest.push(tokens[t]!);
+  }
+  out.text = rest.join(" ");
+  return out;
+}
+
 export function sortImages(p: Property): Property {
   return { ...p, property_images: [...(p.property_images ?? [])].sort((a, b) => a.position - b.position) };
 }
@@ -50,7 +82,12 @@ export async function fetchPublishedProperties(client: SupabaseClient<Database>,
   if (filters.purpose !== "all") q = q.eq("transaction_type", filters.purpose);
   if (filters.type !== "all") q = q.eq("property_type", filters.type);
   if (filters.maxprice !== "all") q = q.gt("price", 0).lte("price", Number(filters.maxprice));
-  const s = sanitizeSearch(filters.search);
+  const f = parseSearch(filters.search);
+  if (f.bedrooms !== null) q = q.eq("bedrooms", f.bedrooms);
+  if (f.bathrooms !== null) q = q.eq("bathrooms", f.bathrooms);
+  if (f.parking !== null) q = q.eq("parking_spaces", f.parking);
+  else if (f.parkingAny) q = q.gte("parking_spaces", 1);
+  const s = sanitizeSearch(f.text);
   if (s) q = q.or(`title.ilike.%${s}%,neighborhood.ilike.%${s}%,city.ilike.%${s}%,description.ilike.%${s}%`);
   const { data, error } = await q.order("featured", { ascending: false }).order("created_at", { ascending: false });
   if (error) throw new Error("Não foi possível carregar os imóveis. Tente novamente em instantes.");
