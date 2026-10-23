@@ -3,7 +3,7 @@ import { type PropertyStatus, type PropertyType, type TransactionType } from "./
 export type PropertyInput = {
   title: string; description: string; property_type: PropertyType; transaction_type: TransactionType;
   price: number; condominium_fee: number | null; iptu: number | null;
-  bedrooms: number; bathrooms: number; parking_spaces: number; area_m2: number | null; land_area_m2: number | null; built_area_m2: number | null;
+  bedrooms: number; bathrooms: number; parking_spaces: number; land_area_m2: number | null; built_area_m2: number | null;
   address: string | null; show_address: boolean; neighborhood: string; city: string; state: string;
   cover_image: string | null; status: PropertyStatus; featured: boolean;
 };
