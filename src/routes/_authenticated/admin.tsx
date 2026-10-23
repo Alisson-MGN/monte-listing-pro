@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { money, PHOTO_BUCKET, PUBLIC_COLUMNS, propertyTypes, reference, resolvePhotos, sortImages, statusLabels, transactionTypes, type Property, type PropertyStatus } from "@/lib/properties";
-import { movePhoto, parsePropertyForm, pickCover, type Photo } from "@/lib/property-form";
+import { MAX_EXTRA_PHOTOS, movePhoto, parsePropertyForm, pickCover, type Photo } from "@/lib/property-form";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({ meta: [
@@ -151,29 +151,46 @@ function AdminPage() {
 
 function PropertyForm({ property: p, busy, error, onSave, onCancel }: { property: AdminProperty | null; busy: boolean; error: string; onSave: (d: FormData, photos: Photo[], cover: string | null, removed: string[]) => void; onCancel: () => void }) {
   const [photos, setPhotos] = useState<Photo[]>(p?.photos ?? []);
-  const [cover, setCover] = useState<string | null>(p?.coverKey ?? null);
   const [removed, setRemoved] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
   const key = (x: Photo) => x.path ?? x.url;
-  const coverKey = pickCover(photos, cover);
+  const coverKey = pickCover(photos, null);
+  const extras = photos.slice(1);
 
-  async function upload(files: FileList | null) {
-    if (!files?.length) return;
+  async function uploadOne(file: File): Promise<Photo | null> {
+    if (!file.type.startsWith("image/")) { toast.error(`${file.name}: envie apenas imagens.`); return null; }
+    if (file.size > MAX_MB * 1024 * 1024) { toast.error(`${file.name}: a foto deve ter até ${MAX_MB} MB.`); return null; }
+    const ext = (file.name.split(".").pop() ?? "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
+    const path = `${crypto.randomUUID()}.${ext}`;
+    const { error: e } = await supabase.storage.from(PHOTO_BUCKET).upload(path, file, { contentType: file.type });
+    if (e) { toast.error(`${file.name}: não foi possível enviar a foto.`); return null; }
+    const { data } = await supabase.storage.from(PHOTO_BUCKET).createSignedUrl(path, 60 * 60 * 6);
+    return { path, url: data?.signedUrl ?? "" };
+  }
+
+  async function uploadCover(files: FileList | null) {
+    const file = files?.[0]; if (!file) return;
     setUploading(true);
-    const added: Photo[] = []; let failed = 0;
-    for (const file of Array.from(files)) {
-      if (!file.type.startsWith("image/")) { toast.error(`${file.name}: envie apenas imagens.`); failed++; continue; }
-      if (file.size > MAX_MB * 1024 * 1024) { toast.error(`${file.name}: a foto deve ter até ${MAX_MB} MB.`); failed++; continue; }
-      const ext = (file.name.split(".").pop() ?? "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
-      const path = `${crypto.randomUUID()}.${ext}`;
-      const { error: e } = await supabase.storage.from(PHOTO_BUCKET).upload(path, file, { contentType: file.type });
-      if (e) { failed++; continue; }
-      const { data } = await supabase.storage.from(PHOTO_BUCKET).createSignedUrl(path, 60 * 60 * 6);
-      added.push({ path, url: data?.signedUrl ?? "" });
-    }
+    const photo = await uploadOne(file);
+    setUploading(false);
+    if (!photo) return;
+    const old = photos[0];
+    if (old?.path) setRemoved(r => [...r, old.path!]);
+    setPhotos(cur => [photo, ...cur.slice(1)]);
+    toast.success("Foto de capa enviada. Clique em “Salvar” para confirmar.");
+  }
+
+  async function uploadExtras(files: FileList | null) {
+    if (!files?.length) return;
+    const room = MAX_EXTRA_PHOTOS - extras.length;
+    if (room <= 0) { toast.error(`Limite de ${MAX_EXTRA_PHOTOS} fotos adicionais atingido.`); return; }
+    const toSend = Array.from(files).slice(0, room);
+    if (files.length > room) toast.error(`Limite de ${MAX_EXTRA_PHOTOS} fotos adicionais: ${files.length - room} foto(s) não foram enviadas.`);
+    setUploading(true);
+    const added: Photo[] = [];
+    for (const file of toSend) { const ph = await uploadOne(file); if (ph) added.push(ph); }
     setPhotos(cur => [...cur, ...added]); setUploading(false);
     if (added.length) toast.success(`${added.length} foto(s) enviada(s). Clique em “Salvar” para confirmar.`);
-    if (failed && !added.length) toast.error("Não foi possível enviar as fotos.");
   }
   function removePhoto(i: number) {
     const ph = photos[i]; if (!ph) return;
@@ -204,19 +221,22 @@ function PropertyForm({ property: p, busy, error, onSave, onCancel }: { property
     <label className="admin-check wide"><input type="checkbox" name="show_address" defaultChecked={p?.show_address} /> Mostrar o endereço no site</label>
 
     <div className="wide photo-manager">
-      <div className="demo-field"><label htmlFor="photos">Fotos (JPG, PNG ou WEBP, até {MAX_MB} MB cada — pode selecionar várias)</label>
-        <input id="photos" type="file" accept="image/*" multiple disabled={uploading} onChange={e => { upload(e.target.files); e.target.value = ""; }} /></div>
+      <div className="demo-field"><label htmlFor="cover-photo">Foto de capa (1 imagem — aparece no cartão da listagem e abre a galeria)</label>
+        <input id="cover-photo" type="file" accept="image/*" disabled={uploading} onChange={e => { uploadCover(e.target.files); e.target.value = ""; }} /></div>
+      {photos[0] && <ol className="photo-list"><li className="is-cover">
+        <img src={photos[0].url} alt="Foto de capa" />
+        <span className="cover-badge">Capa</span>
+        <div className="photo-tools"><button type="button" onClick={() => removePhoto(0)} aria-label="Remover foto de capa">Remover</button></div></li></ol>}
+      <div className="demo-field"><label htmlFor="photos">Fotos adicionais (até {MAX_EXTRA_PHOTOS} — {extras.length} de {MAX_EXTRA_PHOTOS} usadas, até {MAX_MB} MB cada)</label>
+        <input id="photos" type="file" accept="image/*" multiple disabled={uploading || extras.length >= MAX_EXTRA_PHOTOS} onChange={e => { uploadExtras(e.target.files); e.target.value = ""; }} /></div>
       {uploading && <p className="admin-list" role="status">Enviando fotos…</p>}
-      {photos.length === 0 ? <p className="admin-list">Nenhuma foto ainda.</p> :
-        <ol className="photo-list">{photos.map((ph, i) => <li key={key(ph)} className={key(ph) === coverKey ? "is-cover" : ""}>
-          <img src={ph.url} alt={`Foto ${i + 1}`} />
-          {key(ph) === coverKey && <span className="cover-badge">Capa</span>}
-          <div className="photo-tools">
-            <button type="button" onClick={() => setPhotos(movePhoto(photos, i, -1))} disabled={i === 0} aria-label={`Mover foto ${i + 1} para trás`}>←</button>
-            <button type="button" onClick={() => setPhotos(movePhoto(photos, i, 1))} disabled={i === photos.length - 1} aria-label={`Mover foto ${i + 1} para frente`}>→</button>
-            {key(ph) !== coverKey && <button type="button" onClick={() => setCover(key(ph))}>Usar como capa</button>}
-            <button type="button" onClick={() => removePhoto(i)} aria-label={`Remover foto ${i + 1}`}>Remover</button>
-          </div></li>)}</ol>}
+      {extras.length > 0 && <ol className="photo-list">{extras.map((ph, i) => <li key={key(ph)}>
+        <img src={ph.url} alt={`Foto adicional ${i + 1}`} />
+        <div className="photo-tools">
+          <button type="button" onClick={() => setPhotos(movePhoto(photos, i + 1, -1))} disabled={i === 0} aria-label={`Mover foto adicional ${i + 1} para trás`}>←</button>
+          <button type="button" onClick={() => setPhotos(movePhoto(photos, i + 1, 1))} disabled={i === extras.length - 1} aria-label={`Mover foto adicional ${i + 1} para frente`}>→</button>
+          <button type="button" onClick={() => removePhoto(i + 1)} aria-label={`Remover foto adicional ${i + 1}`}>Remover</button>
+        </div></li>)}</ol>}
     </div>
 
     {f("status", "Situação", <select id="status" name="status" defaultValue={p?.status ?? "draft"}>{(Object.keys(statusLabels) as PropertyStatus[]).map(s => <option key={s} value={s}>{statusLabels[s]}</option>)}</select>)}

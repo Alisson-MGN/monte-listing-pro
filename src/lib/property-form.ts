@@ -56,6 +56,8 @@ export function parsePropertyForm(data: FormData): { input: Omit<PropertyInput, 
 }
 
 export type Photo = { path: string | null; url: string };
+/** Maximum additional photos beyond the cover. */
+export const MAX_EXTRA_PHOTOS = 5;
 /** Moves a photo one step up (-1) or down (+1); returns the same order when the move is out of bounds. */
 export function movePhoto<T>(list: T[], index: number, dir: -1 | 1): T[] {
   const j = index + dir; if (j < 0 || j >= list.length) return list;

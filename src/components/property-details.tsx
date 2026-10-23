@@ -18,7 +18,14 @@ function Body({property:p}:{property:Property}){
  const ref=reference(p.id);
  const extras=[p.condominium_fee?`Condomínio ${money(p.condominium_fee)}`:null,p.iptu?`IPTU ${money(p.iptu)}`:null].filter(Boolean);
  return <>
-  <PropertyImage key={gallery[index]??'none'} src={gallery[index]} title={p.title}/>
+   <div className="gallery-main">
+    <PropertyImage key={gallery[index]??'none'} src={gallery[index]} title={p.title}/>
+    {gallery.length>1&&<>
+     <button type="button" className="carousel-arrow prev" onClick={()=>setIndex(i=>(i-1+gallery.length)%gallery.length)} aria-label="Foto anterior">‹</button>
+     <button type="button" className="carousel-arrow next" onClick={()=>setIndex(i=>(i+1)%gallery.length)} aria-label="Próxima foto">›</button>
+     <span className="gallery-counter" aria-live="polite">{index+1} / {gallery.length}</span>
+    </>}
+   </div>
   {gallery.length>1&&<div className="gallery-thumbs" role="list" aria-label="Fotos do imóvel">{gallery.map((url,i)=><button key={url+i} type="button" role="listitem" className={`gallery-thumb${i===index?' active':''}`} onClick={()=>setIndex(i)} aria-label={`Ver foto ${i+1} de ${gallery.length}`}><img src={url} alt="" loading="lazy"/></button>)}</div>}
   <Dialog.Title asChild><h2>{p.title}</h2></Dialog.Title>
   <p className="modal-location">⌖ {propertyLocation(p)} · Referência {ref}</p>
