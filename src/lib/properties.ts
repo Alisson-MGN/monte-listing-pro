@@ -10,7 +10,7 @@ export type Property = {
   id: string; title: string; description: string;
   property_type: PropertyType; transaction_type: TransactionType;
   price: number; condominium_fee: number | null; iptu: number | null;
-  bedrooms: number; bathrooms: number; parking_spaces: number; area_m2: number | null;
+  bedrooms: number; bathrooms: number; parking_spaces: number; area_m2: number | null; land_area_m2: number | null; built_area_m2: number | null;
   address?: string | null; show_address: boolean; public_address: string | null;
   neighborhood: string; city: string; state: string; cover_image: string | null;
   status: PropertyStatus; featured: boolean; created_at: string; updated_at: string;
@@ -32,7 +32,7 @@ export const typeLabel = (t: PropertyType) => propertyTypes.find(x => x.value ==
 export type Filters = { purpose: "all" | TransactionType; type: "all" | PropertyType; maxprice: string; search: string };
 export const defaultFilters: Filters = { purpose: "all", type: "all", maxprice: "all", search: "" };
 
-export const PUBLIC_COLUMNS = "id,title,description,property_type,transaction_type,price,condominium_fee,iptu,bedrooms,bathrooms,parking_spaces,area_m2,show_address,public_address,neighborhood,city,state,cover_image,status,featured,created_at,updated_at,property_images(id,url,position,storage_path)";
+export const PUBLIC_COLUMNS = "id,title,description,property_type,transaction_type,price,condominium_fee,iptu,bedrooms,bathrooms,parking_spaces,area_m2,land_area_m2,built_area_m2,show_address,public_address,neighborhood,city,state,cover_image,status,featured,created_at,updated_at,property_images(id,url,position,storage_path)";
 export const PHOTO_BUCKET = "property-photos";
 
 /** Removes characters that would break a PostgREST `or` filter; keeps letters, numbers and spaces. */
@@ -63,12 +63,15 @@ export async function fetchPublishedProperty(client: SupabaseClient<Database>, i
   return data ? (await resolvePhotos(client, [sortImages(data as unknown as Property)]))[0] ?? null : null;
 }
 
-export function propertyFeatures(p: Pick<Property, "bedrooms" | "bathrooms" | "parking_spaces" | "area_m2">) {
+export function propertyFeatures(p: Pick<Property, "bedrooms" | "bathrooms" | "parking_spaces" | "area_m2" | "land_area_m2" | "built_area_m2">) {
   const f: string[] = [];
   if (p.bedrooms) f.push(`${p.bedrooms} ${p.bedrooms === 1 ? "quarto" : "quartos"}`);
   if (p.bathrooms) f.push(`${p.bathrooms} ${p.bathrooms === 1 ? "banheiro" : "banheiros"}`);
   if (p.parking_spaces) f.push(`${p.parking_spaces} ${p.parking_spaces === 1 ? "vaga" : "vagas"}`);
-  if (p.area_m2) f.push(`${Number(p.area_m2).toLocaleString("pt-BR")} m²`);
+  const m = (n: number) => `${Number(n).toLocaleString("pt-BR")} m²`;
+  if (p.land_area_m2) f.push(`Terreno ${m(p.land_area_m2)}`);
+  if (p.built_area_m2) f.push(`Construção ${m(p.built_area_m2)}`);
+  if (!p.land_area_m2 && !p.built_area_m2 && p.area_m2) f.push(m(p.area_m2));
   return f;
 }
 export function propertyLocation(p: Pick<Property, "public_address" | "neighborhood" | "city" | "state">) {
@@ -94,4 +97,12 @@ export async function resolvePhotos(client: SupabaseClient<Database>, list: Prop
   for (const d of data ?? []) if (d.path && d.signedUrl) map.set(d.path, d.signedUrl);
   const r = (v: string | null) => (v && !isUrl(v) ? map.get(v) ?? null : v);
   return list.map(p => ({ ...p, cover_image: r(p.cover_image), property_images: p.property_images.map(i => ({ ...i, url: r(i.url) ?? "" })).filter(i => i.url) }));
+}
+
+export const MAX_FEATURED = 10;
+/** Featured published listings for the home carousel (max 10). */
+export async function fetchFeaturedProperties(client: SupabaseClient<Database>) {
+  const { data, error } = await client.from("properties").select(PUBLIC_COLUMNS).eq("status", "published").eq("featured", true).order("updated_at", { ascending: false }).limit(MAX_FEATURED);
+  if (error) throw new Error("Não foi possível carregar os destaques.");
+  return resolvePhotos(client, (data as unknown as Property[]).map(sortImages));
 }

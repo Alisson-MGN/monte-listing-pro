@@ -3,7 +3,7 @@ import { type PropertyStatus, type PropertyType, type TransactionType } from "./
 export type PropertyInput = {
   title: string; description: string; property_type: PropertyType; transaction_type: TransactionType;
   price: number; condominium_fee: number | null; iptu: number | null;
-  bedrooms: number; bathrooms: number; parking_spaces: number; area_m2: number | null;
+  bedrooms: number; bathrooms: number; parking_spaces: number; land_area_m2: number | null; built_area_m2: number | null;
   address: string | null; show_address: boolean; neighborhood: string; city: string; state: string;
   cover_image: string | null; status: PropertyStatus; featured: boolean;
 };
@@ -44,7 +44,8 @@ export function parsePropertyForm(data: FormData): { input: Omit<PropertyInput, 
       bedrooms: num(data.get("bedrooms"), "Quartos", { int: true }) ?? 0,
       bathrooms: num(data.get("bathrooms"), "Banheiros", { int: true }) ?? 0,
       parking_spaces: num(data.get("parking_spaces"), "Vagas", { int: true }) ?? 0,
-      area_m2: num(data.get("area_m2"), "Área", { optional: true }),
+      land_area_m2: num(data.get("land_area_m2"), "Área do terreno", { optional: true }),
+      built_area_m2: num(data.get("built_area_m2"), "Área da construção", { optional: true }),
       address, show_address: Boolean(address) && data.get("show_address") === "on",
       neighborhood: String(data.get("neighborhood") ?? "").trim(),
       city: String(data.get("city") ?? "").trim() || "Monte Santo de Minas",

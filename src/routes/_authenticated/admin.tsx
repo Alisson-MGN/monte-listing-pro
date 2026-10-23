@@ -23,6 +23,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
 
 type AdminProperty = Property & { photos: Photo[]; coverKey: string | null };
 const MAX_MB = 10;
+const FEATURED_MSG = "Já existem 10 imóveis em destaque. Desmarque “Destaque” em outro imóvel antes de marcar este.";
 
 async function fetchIsAdmin() {
   const { data: u } = await supabase.auth.getUser();
@@ -64,8 +65,8 @@ function AdminPage() {
       const { input } = parsePropertyForm(data);
       const row = { ...input, cover_image: pickCover(photos, cover) };
       let pid = id;
-      if (pid) { const { error } = await supabase.from("properties").update(row).eq("id", pid); if (error) throw new Error("Não foi possível salvar o imóvel. Verifique sua permissão e tente novamente."); }
-      else { const { data: r, error } = await supabase.from("properties").insert(row).select("id").single(); if (error) throw new Error("Não foi possível criar o imóvel. Verifique sua permissão e tente novamente."); pid = r.id; }
+      if (pid) { const { error } = await supabase.from("properties").update(row).eq("id", pid); if (error) throw new Error(error.message.includes("FEATURED_LIMIT") ? FEATURED_MSG : "Não foi possível salvar o imóvel. Verifique sua permissão e tente novamente."); }
+      else { const { data: r, error } = await supabase.from("properties").insert(row).select("id").single(); if (error) throw new Error(error.message.includes("FEATURED_LIMIT") ? FEATURED_MSG : "Não foi possível criar o imóvel. Verifique sua permissão e tente novamente."); pid = r.id; }
       const { error: delErr } = await supabase.from("property_images").delete().eq("property_id", pid);
       if (delErr) throw new Error("Imóvel salvo, mas não foi possível atualizar as fotos.");
       if (photos.length) {
@@ -189,7 +190,8 @@ function PropertyForm({ property: p, busy, error, onSave, onCancel }: { property
     {f("property_type", "Tipo *", <select id="property_type" name="property_type" defaultValue={p?.property_type ?? "casa"}>{propertyTypes.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}</select>)}
     {f("transaction_type", "Finalidade *", <select id="transaction_type" name="transaction_type" defaultValue={p?.transaction_type ?? "venda"}>{transactionTypes.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}</select>)}
     {f("price", "Preço (R$) — vazio mostra “Consulte o valor”", <input id="price" name="price" type="number" min="0" step="0.01" defaultValue={p?.price || ""} />)}
-    {f("area_m2", "Área (m²)", <input id="area_m2" name="area_m2" type="number" min="0" step="0.01" defaultValue={p?.area_m2 ?? ""} />)}
+    {f("land_area_m2", "Área do terreno (m²)", <input id="land_area_m2" name="land_area_m2" type="number" min="0" step="0.01" defaultValue={p?.land_area_m2 ?? ""} />)}
+    {f("built_area_m2", "Área da construção (m²)", <input id="built_area_m2" name="built_area_m2" type="number" min="0" step="0.01" defaultValue={p?.built_area_m2 ?? ""} />)}
     {f("condominium_fee", "Condomínio (R$, opcional)", <input id="condominium_fee" name="condominium_fee" type="number" min="0" step="0.01" defaultValue={p?.condominium_fee ?? ""} />)}
     {f("iptu", "IPTU (R$, opcional)", <input id="iptu" name="iptu" type="number" min="0" step="0.01" defaultValue={p?.iptu ?? ""} />)}
     {f("bedrooms", "Quartos", <input id="bedrooms" name="bedrooms" type="number" min="0" step="1" defaultValue={p?.bedrooms ?? 0} />)}
@@ -218,7 +220,7 @@ function PropertyForm({ property: p, busy, error, onSave, onCancel }: { property
     </div>
 
     {f("status", "Situação", <select id="status" name="status" defaultValue={p?.status ?? "draft"}>{(Object.keys(statusLabels) as PropertyStatus[]).map(s => <option key={s} value={s}>{statusLabels[s]}</option>)}</select>)}
-    <label className="admin-check"><input type="checkbox" name="featured" defaultChecked={p?.featured} /> Destaque</label>
+    <label className="admin-check"><input type="checkbox" name="featured" defaultChecked={p?.featured} /> Destaque — aparece no quadro principal do site (até 10, só publicados)</label>
     <p className="admin-list wide">Novos imóveis começam como “Rascunho”. Somente imóveis “Publicado” aparecem no site; vendidos e alugados saem do site automaticamente.</p>
     {error && <div className="form-status wide" role="alert">{error}</div>}
     <div className="admin-actions wide"><Button variant="prototype-gold" size="prototype" type="submit" disabled={busy || uploading}>{busy ? "Salvando…" : "Salvar"}</Button><Button variant="prototype-ghost" size="prototype" type="button" onClick={onCancel}>Cancelar</Button></div>
