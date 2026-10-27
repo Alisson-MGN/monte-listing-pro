@@ -6,22 +6,27 @@ import { fetchFeaturedProperties, money, propertyLocation, type Property } from 
 const INTERVAL = 7000;
 
 /** Home hero frame: rotates featured listings every 7s; arrows, dots and swipe change slides. Falls back to the original illustrative photo. */
-export function FeaturedCarousel({ onOpen }: { onOpen: (p: Property) => void }) {
+export function FeaturedCarousel({ onOpen, paused: externalPaused = false }: { onOpen: (p: Property) => void; paused?: boolean }) {
   const { data } = useQuery({ queryKey: ["catalog", "featured"], queryFn: () => fetchFeaturedProperties(supabase) });
   const items = (data ?? []).filter(p => p.cover_image ?? p.property_images[0]?.url);
   const [i, setI] = useState(0);
   const [tick, setTick] = useState(0);
+  const [localPaused, setLocalPaused] = useState(false);
+  const paused = externalPaused || localPaused;
   const touch = useRef<number | null>(null);
   const n = items.length;
   const go = (d: number) => { setI(c => (c + d + n) % n); setTick(t => t + 1); };
 
-  useEffect(() => { if (n < 2) return; const t = setTimeout(() => setI(c => (c + 1) % n), INTERVAL); return () => clearTimeout(t); }, [i, n, tick]);
+  useEffect(() => { const onVis = () => setLocalPaused(document.hidden); document.addEventListener("visibilitychange", onVis); return () => document.removeEventListener("visibilitychange", onVis); }, []);
+  useEffect(() => { if (paused || n < 2) return; const t = setTimeout(() => setI(c => (c + 1) % n), INTERVAL); return () => clearTimeout(t); }, [i, n, tick, paused]);
   useEffect(() => { if (i >= n && n) setI(0); }, [i, n]);
 
   if (!n) return <div className="hero-photo"><span className="illustration-note">Foto ilustrativa</span><div className="photo-caption"><div><small>MARANGONI IMOBILIÁRIA</small><strong>Um bom negócio começa com confiança.</strong></div><span className="caption-arrow">↗</span></div></div>;
 
   const p = items[Math.min(i, n - 1)]!;
   return <div className="hero-photo hero-carousel" aria-roledescription="carrossel" aria-label="Imóveis em destaque"
+    onMouseEnter={() => setLocalPaused(true)} onMouseLeave={() => setLocalPaused(false)}
+    onFocus={() => setLocalPaused(true)} onBlur={() => setLocalPaused(false)}
     onTouchStart={e => { touch.current = e.touches[0]!.clientX; }}
     onTouchEnd={e => { if (touch.current === null) return; const dx = e.changedTouches[0]!.clientX - touch.current; touch.current = null; if (Math.abs(dx) > 40) go(dx < 0 ? 1 : -1); }}>
     {items.map((x, k) => <img key={x.id} src={x.cover_image ?? x.property_images[0]!.url} alt={k === i ? `Foto de ${x.title}` : ""} className={k === i ? "active" : ""} loading={k === 0 ? "eager" : "lazy"} />)}

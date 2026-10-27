@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { Button } from "@/components/ui/button";
 import { PropertyImage } from "@/components/property-image";
@@ -6,6 +6,8 @@ import { money, propertyFeatures, propertyGallery, propertyLocation, reference, 
 import { propertyEnquiryMessage, whatsappLink } from "@/lib/contact";
 
 export function PropertyDetails({property,onClose}:{property:Property|null;onClose:()=>void}){
+ const prevFocus=useRef<Element|null>(null);
+ useEffect(()=>{if(!property)return;prevFocus.current=document.activeElement;const prevOverflow=document.body.style.overflow;document.body.style.overflow='hidden';return()=>{document.body.style.overflow=prevOverflow;(prevFocus.current as HTMLElement|null)?.focus?.();};},[property]);
  return <Dialog.Root open={Boolean(property)} onOpenChange={open=>{if(!open)onClose()}}><Dialog.Portal><Dialog.Overlay className="modal open"><Dialog.Content className="modal-box">
   <div className="modal-head"><div className="eyebrow">Detalhes do imóvel</div><Dialog.Close asChild><Button variant="prototype-close" size="prototype" aria-label="Fechar">✕</Button></Dialog.Close></div>
   {property&&<Body key={property.id} property={property}/>}
