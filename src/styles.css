@@ -196,3 +196,74 @@ button,a,input,select,summary{touch-action:manipulation}
 .about-photo.about-card{background:#000}
 /* Setas da galeria também nos cartões da listagem */
 .cover .carousel-arrow{top:50%;width:34px;height:34px;font-size:20px}
+
+/* Modern preview palette (logo: black / emerald #078550 / lime #b9e356, no gold) */
+:root{--font-display:Manrope,"Avenir Next","Segoe UI",system-ui,sans-serif;--font-body:Manrope,"Avenir Next","Segoe UI",system-ui,sans-serif}
+body{background:#f6f7f4;color:#101828}
+.top{background:rgba(0,0,0,.96)}
+.links{color:#e5e7eb}
+.hero{color:#fff;padding-bottom:64px}
+.hero h1{color:#fff}
+.hero h1 em{color:#b9e356}
+.hero .eyebrow{color:#b9e356}
+.eyebrow{color:#078550}
+.photo-caption{color:#fff}
+.photo-caption small{color:#d1d5db}
+.hero-search{margin-top:36px;background:#fff;border:1px solid #e5e7eb;border-radius:18px;box-shadow:0 20px 50px rgba(0,0,0,.25);color:#101828}
+.hero-search .field label{color:#475569}
+.hero-search .field input,.hero-search .field select{background:#fff;border-color:#e2e8f0;color:#101828}
+.hero-search .field input:focus,.hero-search .field select:focus{border-color:#078550}
+.section{background:#f6f7f4}
+.section.alt{background:#fff}
+.section h2{color:#101828}
+.section-head p{color:#475569}
+.card{background:#fff;border-color:#e5e7eb;color:#101828}
+.card h3{color:#101828}
+.loc{color:#475569}
+.price{color:#078550}
+.features{color:#475569;border-color:#e5e7eb}
+.card-bottom{color:#334155}
+.tag{background:#078550;color:#fff}
+.tag-sale{background:#078550;color:#fff}
+.tag-rent{background:#000;color:#fff}
+.demo-badge{background:#fff;color:#334155;border-color:#e5e7eb}
+.gold{background:#078550;color:#fff}
+.ghost{border-color:rgba(185,227,86,.55);color:#b9e356;background:transparent}
+.caption-arrow{color:#078550}
+.carousel-arrow:hover{color:#078550}
+.carousel-dots button.active{background:#078550}
+.gallery-thumb.active{border-color:#078550}
+.prototype-link{color:#078550}
+.subtle-link{color:#078550}
+footer .subtle-link{color:#b9e356}
+.service{background:#fff;border-color:#e5e7eb}
+.service .ico{color:#078550}
+.service .ico svg{width:28px;height:28px;display:block}
+.service h3{color:#101828}
+.service p{color:#475569}
+.about-copy p{color:#475569}
+.about-panel{background:#fff;border-color:#e5e7eb;color:#101828}
+.contact-panel{background:#000;border-color:#1f2937;color:#fff}
+.contact-panel p{color:#d1d5db}
+.contact-location{color:#9ca3af}
+.contact-phone{color:#b9e356}
+.contact-actions .gold{background:#b9e356;color:#000}
+footer{background:#000;color:#cbd5e1;border-color:#1f2937}
+.modal-box{background:#fff;color:#101828}
+.modal-box h2{color:#101828}
+.modal-location{color:#475569}
+.results-bar{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin-bottom:16px;flex-wrap:wrap}
+.results-count{margin:0;color:#475569;font-size:14px}
+.sort-field label{display:block;font-size:11px;color:#475569;margin:0 0 5px 5px}
+.sort-field select{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:10px;color:#101828;min-height:44px}
+.cover{cursor:pointer}
+.social-links{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.social-links a{display:inline-flex;align-items:center;padding:8px 12px;border:1px solid #e5e7eb;border-radius:999px;font-size:13px;font-weight:700;background:#fff;color:#101828}
+.top .social-links a{background:transparent;border-color:rgba(255,255,255,.25);color:#fff}
+footer .social-links a{background:transparent;border-color:rgba(255,255,255,.25);color:#fff}
+.contact-social{margin-top:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;color:#d1d5db;font-size:13px}
+.contact-social a{background:#111827;border:1px solid #374151;border-radius:999px;padding:8px 12px;color:#fff;font-weight:700}
+.wa-float{position:fixed;right:18px;bottom:18px;z-index:20;background:#078550;color:#fff;padding:13px 18px;border-radius:999px;font-weight:800;box-shadow:0 12px 30px rgba(0,0,0,.25)}
+.wa-float:hover{background:#056a42}
+@media(max-width:900px){.hero-search{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:560px){.hero-search{grid-template-columns:minmax(0,1fr)}.hero-search .btn{width:100%}}
