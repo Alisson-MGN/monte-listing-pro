@@ -137,7 +137,8 @@ button,a,input,select,summary{touch-action:manipulation}
 .footer-row .contact-phone{font-size:12px;margin:0}
 
 /* Área da equipe e galeria */
-.admin-page h2{font:36px/1.15 var(--font-display);margin:8px 0 22px}
+.admin-page{background:linear-gradient(rgba(0,0,0,0.88),rgba(0,0,0,0.88)),url('/marangoni-fundo.jpg') center/cover no-repeat;color:#fff;padding:28px;border-radius:20px}
+.admin-page h2{font:36px/1.15 var(--font-display);margin:8px 0 22px;color:#fff}
 .admin-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
 .admin-page .admin-form{margin-top:10px}
 .admin-form.single{grid-template-columns:minmax(0,1fr)}
