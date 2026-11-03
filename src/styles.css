@@ -276,3 +276,8 @@ footer .social-links a{background:transparent;border-color:rgba(255,255,255,.25)
 .page-arrow:hover:not(:disabled){background:#056a42;border-color:#056a42}
 .page-arrow:disabled{opacity:1;background:#e5e7eb;border-color:#e5e7eb;color:#94a3b8;box-shadow:none;cursor:default}
 .page-info{color:var(--muted);font-size:14px}
+
+/* Admin: título branco e fundo mais claro para destacar o logo */
+.section .admin-page{background:linear-gradient(rgba(0,0,0,0.65),rgba(0,0,0,0.65)),url('/marangoni-fundo.jpg') center/cover no-repeat;color:#fff}
+.section .admin-page h2{color:#fff}
+.section .admin-page .eyebrow{color:#b9e356}
