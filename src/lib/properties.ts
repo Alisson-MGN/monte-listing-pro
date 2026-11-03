@@ -120,7 +120,7 @@ export function propertyGallery(p: Pick<Property, "cover_image" | "property_imag
 }
 export const reference = (id: string) => id.slice(0, 8).toUpperCase();
 export function money(n: number | null | undefined) {
-  return n && n > 0 ? Number(n).toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 }) : "Consulte o valor";
+  return n && n > 0 ? Number(n).toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "Consulte o valor";
 }
 export function safeImageUrl(value: string) { try { const url = new URL(value); return url.protocol === "https:" ? url.href : null } catch { return null } }
 
