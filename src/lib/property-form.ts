@@ -12,7 +12,7 @@ const TYPES = ["casa", "apartamento", "terreno", "comercial", "rural"];
 const STATUS = ["draft", "published", "sold", "rented"];
 
 function num(v: FormDataEntryValue | null, label: string, opts: { optional?: boolean; int?: boolean } = {}) {
-  const raw = String(v ?? "").trim().replace(",", ".");
+  const raw = String(v ?? "").trim().replace(/^R\$\s*/, "").replace(/\./g, "").replace(",", ".");
   if (!raw) { if (opts.optional) return null; return 0; }
   const n = Number(raw);
   if (!Number.isFinite(n) || n < 0) throw new Error(`${label}: informe um número igual ou maior que zero.`);
