@@ -149,6 +149,33 @@ function AdminPage() {
   </div></main>;
 }
 
+
+function formatBRLValue(n: number | null | undefined) {
+  if (n == null || n === 0) return "";
+  return n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+function BRLInput({ id, name, initial }: { id: string; name: string; initial?: number | null }) {
+  const [v, setV] = useState(formatBRLValue(initial));
+  return <input id={id} name={name} type="text" inputMode="decimal" placeholder="R$ 0,00" value={v} onChange={e => { const digits = e.target.value.replace(/\D/g, ""); setV(digits ? (Number(digits) / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) : ""); }} />;
+}
+function formatBRDecimalValue(n: number | null | undefined) {
+  if (n == null) return "";
+  return n.toLocaleString("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+}
+function formatBRDecimal(raw: string) {
+  const clean = raw.replace(/[^0-9,.]/g, "");
+  const firstComma = clean.indexOf(",");
+  const intPart = (firstComma >= 0 ? clean.slice(0, firstComma) : clean).replace(/\./g, "").replace(/^0+(?=\d)/, "");
+  const decPart = firstComma >= 0 ? clean.slice(firstComma + 1).replace(/[^0-9]/g, "").slice(0, 2) : "";
+  const grouped = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  if (firstComma >= 0) return decPart ? `${grouped},${decPart}` : `${grouped},`;
+  return grouped;
+}
+function BRDecimalInput({ id, name, initial, placeholder }: { id: string; name: string; initial?: number | null; placeholder?: string }) {
+  const [v, setV] = useState(formatBRDecimalValue(initial));
+  return <input id={id} name={name} type="text" inputMode="decimal" placeholder={placeholder} value={v} onChange={e => setV(formatBRDecimal(e.target.value))} />;
+}
+
 function PropertyForm({ property: p, busy, error, onSave, onCancel }: { property: AdminProperty | null; busy: boolean; error: string; onSave: (d: FormData, photos: Photo[], cover: string | null, removed: string[]) => void; onCancel: () => void }) {
   const [photos, setPhotos] = useState<Photo[]>(p?.photos ?? []);
   const [removed, setRemoved] = useState<string[]>([]);
@@ -206,11 +233,11 @@ function PropertyForm({ property: p, busy, error, onSave, onCancel }: { property
     {f("description", "Descrição", <textarea id="description" name="description" rows={5} defaultValue={p?.description} />, true)}
     {f("property_type", "Tipo *", <select id="property_type" name="property_type" defaultValue={p?.property_type ?? "casa"}>{propertyTypes.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}</select>)}
     {f("transaction_type", "Finalidade *", <select id="transaction_type" name="transaction_type" defaultValue={p?.transaction_type ?? "venda"}>{transactionTypes.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}</select>)}
-    {f("price", "Preço (R$) — vazio mostra “Consulte o valor”", <input id="price" name="price" type="number" min="0" step="0.01" defaultValue={p?.price || ""} />)}
-    {f("land_area_m2", "Área do terreno (m²)", <input id="land_area_m2" name="land_area_m2" type="number" min="0" step="0.01" defaultValue={p?.land_area_m2 ?? ""} />)}
-    {f("built_area_m2", "Área da construção (m²)", <input id="built_area_m2" name="built_area_m2" type="number" min="0" step="0.01" defaultValue={p?.built_area_m2 ?? ""} />)}
-    {f("condominium_fee", "Condomínio (R$, opcional)", <input id="condominium_fee" name="condominium_fee" type="number" min="0" step="0.01" defaultValue={p?.condominium_fee ?? ""} />)}
-    {f("iptu", "IPTU (R$, opcional)", <input id="iptu" name="iptu" type="number" min="0" step="0.01" defaultValue={p?.iptu ?? ""} />)}
+    {f("price", "Preço (R$) — vazio mostra “Consulte o valor”", <BRLInput id="price" name="price" initial={p?.price} />)}
+    {f("land_area_m2", "Área do terreno (m²)", <BRDecimalInput id="land_area_m2" name="land_area_m2" initial={p?.land_area_m2} placeholder="Ex.: 350,50" />)}
+    {f("built_area_m2", "Área da construção (m²)", <BRDecimalInput id="built_area_m2" name="built_area_m2" initial={p?.built_area_m2} placeholder="Ex.: 120,00" />)}
+    {f("condominium_fee", "Condomínio (R$, opcional)", <BRLInput id="condominium_fee" name="condominium_fee" initial={p?.condominium_fee} />)}
+    {f("iptu", "IPTU (R$, opcional)", <BRLInput id="iptu" name="iptu" initial={p?.iptu} />)}
     {f("bedrooms", "Quartos", <input id="bedrooms" name="bedrooms" type="number" min="0" step="1" defaultValue={p?.bedrooms ?? 0} />)}
     {f("bathrooms", "Banheiros", <input id="bathrooms" name="bathrooms" type="number" min="0" step="1" defaultValue={p?.bathrooms ?? 0} />)}
     {f("parking_spaces", "Vagas de garagem", <input id="parking_spaces" name="parking_spaces" type="number" min="0" step="1" defaultValue={p?.parking_spaces ?? 0} />)}
