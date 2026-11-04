@@ -240,7 +240,7 @@ function PropertyForm({ property: p, busy, error, onSave, onCancel }: { property
     {f("iptu", "IPTU (R$, opcional)", <BRLInput id="iptu" name="iptu" initial={p?.iptu} />)}
     {f("bedrooms", "Quartos", <input id="bedrooms" name="bedrooms" type="number" min="0" step="1" defaultValue={p?.bedrooms ?? 0} />)}
     {f("bathrooms", "Banheiros", <input id="bathrooms" name="bathrooms" type="number" min="0" step="1" defaultValue={p?.bathrooms ?? 0} />)}
-    {f("parking_spaces", "Vagas de garagem", <input id="parking_spaces" name="parking_spaces" type="number" min="0" step="1" defaultValue={p?.parking_spaces ?? 0} />)}
+    {f("parking_spaces", "Garagens", <input id="parking_spaces" name="parking_spaces" type="number" min="0" step="1" defaultValue={p?.parking_spaces ?? 0} />)}
     {f("neighborhood", "Bairro", <input id="neighborhood" name="neighborhood" defaultValue={p?.neighborhood} />)}
     {f("city", "Cidade", <input id="city" name="city" defaultValue={p?.city ?? "Monte Santo de Minas"} />)}
     {f("state", "Estado (sigla)", <input id="state" name="state" maxLength={2} defaultValue={p?.state ?? "MG"} />)}
