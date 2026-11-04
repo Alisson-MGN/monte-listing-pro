@@ -104,7 +104,7 @@ export function propertyFeatures(p: Pick<Property, "bedrooms" | "bathrooms" | "p
   const f: string[] = [];
   if (p.bedrooms) f.push(`${p.bedrooms} ${p.bedrooms === 1 ? "quarto" : "quartos"}`);
   if (p.bathrooms) f.push(`${p.bathrooms} ${p.bathrooms === 1 ? "banheiro" : "banheiros"}`);
-  if (p.parking_spaces) f.push(`${p.parking_spaces} ${p.parking_spaces === 1 ? "vaga" : "vagas"}`);
+  if (p.parking_spaces) f.push(`${p.parking_spaces} ${p.parking_spaces === 1 ? "garagem" : "garagens"}`);
   const m = (n: number) => `${Number(n).toLocaleString("pt-BR")} m²`;
   if (p.land_area_m2) f.push(`Terreno ${m(p.land_area_m2)}`);
   if (p.built_area_m2) f.push(`Construção ${m(p.built_area_m2)}`);
